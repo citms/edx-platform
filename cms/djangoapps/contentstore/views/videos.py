@@ -1,6 +1,7 @@
 """
 Views related to the video upload feature
 """
+from contextlib import closing
 from datetime import datetime, timedelta
 import logging
 
@@ -45,14 +46,6 @@ KEY_EXPIRATION_IN_SECONDS = 86400
 VIDEO_SUPPORTED_FILE_FORMATS = {
     '.mp4': 'video/mp4',
     '.mov': 'video/quicktime',
-}
-
-THUMBNAIL_SUPPORTED_FILE_FORMATS = {
-    '.jpeg': 'image/jpeg',
-    '.jpg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.bmp': 'image/bmp'
 }
 
 VIDEO_UPLOAD_MAX_FILE_SIZE_GB = 5
@@ -160,19 +153,20 @@ def videos_handler(request, course_key_string, edx_video_id=None):
 @login_required
 @require_POST
 def video_images_handler(request, course_key_string, edx_video_id=None):
-    # TODO : We need to be sure what data jQuery fileuploader sends.
-    image_file = request.POST['file']
-    file_name = request.POST['file_name']
+    if 'file' not in request.FILES:
+        return JsonResponse({"error": _(u"No file provided for video image")}, status=400)
+
+    image_file = request.FILES['file']
+    file_name = request.FILES['file'].name
 
     # TODO: Image file validation
-    # We can use profile_iamges/images.py validate_uploaded_image method and may be need to abstract out some
-    # functionality based on our needs.
-    image_url = update_video_image(edx_video_id, course_key_string, image_file, file_name)
-    LOGGER.info(
-        'VIDEOS: Video image updated for edx_video_id [%s]',
-        edx_video_id
-    )
-    return JsonResponse({'image_url' : image_url})
+    with closing(image_file):
+        image_url = update_video_image(edx_video_id, course_key_string, image_file, file_name)
+        LOGGER.info(
+            'VIDEOS: Video image uploaded for edx_video_id [%s] in course [%s]', edx_video_id, course_key_string
+        )
+
+    return JsonResponse({'image_url': image_url})
 
 
 @login_required
@@ -333,7 +327,7 @@ def _get_index_videos(course):
     return list(
         {
             attr: video[attr]
-            for attr in ["edx_video_id", "client_video_id", "created", "duration", "status"]
+            for attr in ["edx_video_id", "client_video_id", "created", "duration", "status", "course_video_image_url"]
         }
         for video in _get_videos(course)
     )
@@ -347,6 +341,7 @@ def videos_index_html(course):
         "videos_index.html",
         {
             "context_course": course,
+            "image_upload_url": reverse_course_url('video_images_handler', unicode(course.id)),
             "video_handler_url": reverse_course_url("videos_handler", unicode(course.id)),
             "encodings_download_url": reverse_course_url("video_encodings_download", unicode(course.id)),
             "previous_uploads": _get_index_videos(course),

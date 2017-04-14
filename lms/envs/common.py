@@ -2510,17 +2510,22 @@ MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED = 5
 MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS = 15 * 60
 
 
-########################## Video Image Storage ############################
+##### LMS DEADLINE DISPLAY TIME_ZONE #######
+TIME_ZONE_DISPLAYED_FOR_DEADLINES = 'UTC'
+
+
+########################## VIDEO IMAGE STORAGE ############################
+
 VIDEO_IMAGE_SETTINGS = dict(
     # Backend storage
     # STORAGE_CLASS='storages.backends.s3boto.S3BotoStorage',
     # STORAGE_KWARGS=dict(bucket='video-image-test-bucket'),
+    STORAGE_KWARGS=dict(
+        location=MEDIA_ROOT,
+        base_url=MEDIA_URL,
+    ),
     DIRECTORY_PREFIX='videoimage/',
 )
-
-
-##### LMS DEADLINE DISPLAY TIME_ZONE #######
-TIME_ZONE_DISPLAYED_FOR_DEADLINES = 'UTC'
 
 
 # Source:

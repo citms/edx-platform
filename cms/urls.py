@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.conf.urls import patterns, include, url
+from django.conf.urls.static import static
 # There is a course creators admin table.
 from ratelimitbackend import admin
 
@@ -186,6 +187,11 @@ if settings.DEBUG:
         urlpatterns += dev_urlpatterns
     except ImportError:
         pass
+
+    urlpatterns += static(
+        settings.VIDEO_IMAGE_SETTINGS['STORAGE_KWARGS']['base_url'],
+        document_root=settings.VIDEO_IMAGE_SETTINGS['STORAGE_KWARGS']['location']
+    )
 
 if 'debug_toolbar' in settings.INSTALLED_APPS:
     import debug_toolbar
