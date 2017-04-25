@@ -533,9 +533,9 @@ def get_last_accessed_courseware(course, request, user):
         user, request, course, field_data_cache, course.id, course=course
     )
     chapter_module = get_current_child(course_module)
-    if chapter_module is not None:
+    if chapter_module is not None and chapter_module.position is not None:
         section_module = get_current_child(chapter_module)
-        if section_module is not None:
+        if section_module is not None and section_module.position is not None:
             url = reverse('courseware_section', kwargs={
                 'course_id': unicode(course.id),
                 'chapter': chapter_module.url_name,
