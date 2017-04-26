@@ -92,6 +92,7 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from openedx.core.djangoapps.self_paced.models import SelfPacedConfiguration
 from openedx.core.djangoapps.monitoring_utils import set_custom_metrics_for_course_key
 from openedx.features.enterprise_support.api import data_sharing_consent_required
+from openedx.features.course_experience.views.course_dates import CourseDatesFragmentView
 from shoppingcart.models import CourseRegistrationCode
 from shoppingcart.utils import is_shopping_cart_enabled
 from student.models import UserTestGroup, CourseEnrollment
@@ -301,6 +302,10 @@ def course_info(request, course_id):
         store_upgrade_cookie = False
         upgrade_cookie_name = 'show_upgrade_notification'
         upgrade_link = None
+
+        # Construct the dates fragment
+        dates_fragment = CourseDatesFragmentView().render_to_fragment(request, course_id=course_id)
+
         if request.user.is_authenticated():
             show_upgrade_notification = False
             if request.GET.get('upgrade', 'false') == 'true':
@@ -328,6 +333,7 @@ def course_info(request, course_id):
             'supports_preview_menu': True,
             'studio_url': get_studio_url(course, 'course_info'),
             'show_enroll_banner': show_enroll_banner,
+            'dates_fragment': dates_fragment,
             'url_to_enroll': url_to_enroll,
             'upgrade_link': upgrade_link,
         }
