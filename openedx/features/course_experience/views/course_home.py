@@ -17,6 +17,7 @@ from util.views import ensure_valid_course_key
 from web_fragments.fragment import Fragment
 
 from course_outline import CourseOutlineFragmentView
+from course_dates import CourseDatesFragmentView
 
 
 class CourseHomeView(CourseTabView):
@@ -53,6 +54,9 @@ class CourseHomeFragmentView(EdxFragmentView):
         # Render the outline as a fragment
         outline_fragment = CourseOutlineFragmentView().render_to_fragment(request, course_id=course_id, **kwargs)
 
+        # Render the course dates as a fragment
+        dates_fragment = CourseDatesFragmentView().render_to_fragment(request, course_id=course_id, **kwargs)
+
         # Get the last accessed courseware
         last_accessed_url, __ = get_last_accessed_courseware(course, request, request.user)
 
@@ -65,6 +69,7 @@ class CourseHomeFragmentView(EdxFragmentView):
             'course': course,
             'outline_fragment': outline_fragment,
             'handouts_html': handouts_html,
+            'dates_fragment': dates_fragment,
             'has_visited_course': last_accessed_url is not None,
             'disable_courseware_js': True,
             'uses_pattern_library': True,
