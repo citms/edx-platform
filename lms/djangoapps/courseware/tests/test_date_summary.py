@@ -7,6 +7,8 @@ from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 from nose.plugins.attrib import attr
 from pytz import utc
+from waffle.testutils import override_flag
+from openedx.features.course_experience import UNIFIED_COURSE_EXPERIENCE_FLAG
 
 from commerce.models import CommerceConfiguration
 from course_modes.tests.factories import CourseModeFactory
@@ -182,37 +184,47 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
         self.assertEqual(block.title, 'current_datetime')
 
     @freeze_time('2015-01-02')
-    def test_todays_date_no_timezone(self):
+    @ddt.data(
+        'info',
+        'openedx.course_experience.course_home',
+    )
+    @override_flag(UNIFIED_COURSE_EXPERIENCE_FLAG, active=True)
+    def test_todays_date_no_timezone(self, url_name):
         self.setup_course_and_user()
         self.client.login(username='mrrobot', password='test')
 
         html_elements = [
-            '<h3 class="hd hd-3 handouts-header">Important Course Dates</h3>',
+            '<h3 class="hd hd-6 handouts-header">Important Course Dates</h3>',
             '<div class="date-summary-container">',
             '<div class="date-summary date-summary-todays-date">',
-            '<span class="hd hd-4 heading localized-datetime"',
+            '<span class="hd hd-6 heading localized-datetime"',
             'data-datetime="2015-01-02 00:00:00+00:00"',
             'data-string="Today is {date}"',
             'data-timezone="None"'
         ]
-        url = reverse('info', args=(self.course.id, ))
+        url = reverse(url_name, args=(self.course.id, ))
         response = self.client.get(url)
         for html in html_elements:
             self.assertContains(response, html)
 
     @freeze_time('2015-01-02')
-    def test_todays_date_timezone(self):
+    @ddt.data(
+        'info',
+        'openedx.course_experience.course_home',
+    )
+    @override_flag(UNIFIED_COURSE_EXPERIENCE_FLAG, active=True)
+    def test_todays_date_timezone(self, url_name):
         self.setup_course_and_user()
         self.client.login(username='mrrobot', password='test')
         set_user_preference(self.user, "time_zone", "America/Los_Angeles")
-        url = reverse('info', args=(self.course.id,))
+        url = reverse(url_name, args=(self.course.id,))
         response = self.client.get(url)
 
         html_elements = [
-            '<h3 class="hd hd-3 handouts-header">Important Course Dates</h3>',
+            '<h3 class="hd hd-6 handouts-header">Important Course Dates</h3>',
             '<div class="date-summary-container">',
             '<div class="date-summary date-summary-todays-date">',
-            '<span class="hd hd-4 heading localized-datetime"',
+            '<span class="hd hd-6 heading localized-datetime"',
             'data-datetime="2015-01-02 00:00:00+00:00"',
             'data-string="Today is {date}"',
             'data-timezone="America/Los_Angeles"'
@@ -227,10 +239,15 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
         self.assertEqual(block.date, self.course.start)
 
     @freeze_time('2015-01-02')
-    def test_start_date_render(self):
+    @ddt.data(
+        'info',
+        'openedx.course_experience.course_home',
+    )
+    @override_flag(UNIFIED_COURSE_EXPERIENCE_FLAG, active=True)
+    def test_start_date_render(self, url_name):
         self.setup_course_and_user()
         self.client.login(username='mrrobot', password='test')
-        url = reverse('info', args=(self.course.id,))
+        url = reverse(url_name, args=(self.course.id,))
         response = self.client.get(url)
         html_elements = [
             'data-string="in 1 day - {date}"',
@@ -240,11 +257,16 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             self.assertContains(response, html)
 
     @freeze_time('2015-01-02')
-    def test_start_date_render_time_zone(self):
+    @ddt.data(
+        'info',
+        'openedx.course_experience.course_home',
+    )
+    @override_flag(UNIFIED_COURSE_EXPERIENCE_FLAG, active=True)
+    def test_start_date_render_time_zone(self, url_name):
         self.setup_course_and_user()
         self.client.login(username='mrrobot', password='test')
         set_user_preference(self.user, "time_zone", "America/Los_Angeles")
-        url = reverse('info', args=(self.course.id,))
+        url = reverse(url_name, args=(self.course.id,))
         response = self.client.get(url)
         html_elements = [
             'data-string="in 1 day - {date}"',
