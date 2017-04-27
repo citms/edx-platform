@@ -29,6 +29,7 @@ from requests.exceptions import ConnectionError, Timeout
 from openedx.core.djangoapps.api_admin.utils import course_discovery_api_client
 
 from openedx.core.lib.token_utils import JwtBuilder
+from openedx.core.djangoapps.catalog.models import CatalogIntegration
 
 
 CONSENT_FAILED_PARAMETER = 'consent_failed'
@@ -455,7 +456,7 @@ def get_dashboard_consent_notification(request, user, course_enrollments):
     return ''
 
 
-def is_course_in_enterprise_catalog(site, course_id, user, enterprise_catalog_id):
+def is_course_in_enterprise_catalog(site, course_id, enterprise_catalog_id):
     """
     Verify that the provided course id exists in the site base list of course
     run keys from the provided enterprise course catalog.
@@ -477,14 +478,20 @@ def is_course_in_enterprise_catalog(site, course_id, user, enterprise_catalog_id
     )
     response = cache.get(cache_key)
     if not response:
-        try:
-            # GET: /api/v1/catalogs/{catalog_id}/contains?course_run_id={course_run_ids}
-            response = course_discovery_api_client(user=user).catalogs(enterprise_catalog_id).contains.get(
-                course_run_id=course_id
-            )
-            cache.set(cache_key, response, settings.COURSES_API_CACHE_TIMEOUT)
-        except (ConnectionError, SlumberBaseException, Timeout):
-            LOGGER.exception('Unable to connect to Course Catalog service for catalog contains endpoint.')
+        catalog_integration = CatalogIntegration.current()
+        if catalog_integration.enabled:
+            try:
+                # GET: /api/v1/catalogs/{catalog_id}/contains?course_run_id={course_run_ids}
+                user = User.objects.get(username=catalog_integration.service_username)
+                response = course_discovery_api_client(user=user).catalogs(enterprise_catalog_id).contains.get(
+                    course_run_id=course_id
+                )
+                cache.set(cache_key, response, settings.COURSES_API_CACHE_TIMEOUT)
+
+            except (User.DoesNotExist, ConnectionError, SlumberBaseException, Timeout):
+                LOGGER.exception('Unable to connect to Course Catalog service for catalog contains endpoint.')
+                return False
+        else:
             return False
 
     try:
