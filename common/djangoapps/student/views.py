@@ -1456,8 +1456,14 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
         AUDIT_LOG.warning(u"Login failed - Account not active for user {0}, resending activation".format(username))
 
     reactivation_email_for_user(user)
-    not_activated_msg = _("Before you sign in, you need to activate your account. We have sent you an "
-                          "email message with instructions for activating your account.")
+    account_email = "<strong>{0}</strong>".format(user.email)
+    help_url = "https://support.edx.org/hc/en-us/articles/227340127-Why-haven-t-I-received-my-activation-email-"
+    help_link = "<a href='{0}' target='_blank'>help page</a>".format(help_url)
+    not_activated_msg = _("Before you sign in, you need to activate your account.<br /><br />We've sent an "
+                          "email message to {email} with instructions for activating your account."
+                          "  For assistance with account activation, please see the {help_link}."
+                          ).format(email=account_email, help_link=help_link)
+
     return JsonResponse({
         "success": False,
         "value": not_activated_msg,
