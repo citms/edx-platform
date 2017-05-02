@@ -818,9 +818,7 @@ class CapaModuleTest(unittest.TestCase):
                 result = module.submit_problem(get_request_dict)
 
             # Expect an AJAX alert message in 'success'
-            expected_msg = 'Error: test error'
-            if exception_class == StudentInputError:
-                expected_msg = 'test error'
+            expected_msg = 'test error'
 
             self.assertEqual(expected_msg, result['success'])
 
@@ -888,10 +886,8 @@ class CapaModuleTest(unittest.TestCase):
                 get_request_dict = {CapaFactory.input_key(): '3.14'}
                 result = module.submit_problem(get_request_dict)
 
-            expected_msg = u'Error: ȧƈƈḗƞŧḗḓ ŧḗẋŧ ƒǿř ŧḗşŧīƞɠ'
             # Expect an AJAX alert message in 'success'
-            if exception_class == StudentInputError:
-                expected_msg = u'ȧƈƈḗƞŧḗḓ ŧḗẋŧ ƒǿř ŧḗşŧīƞɠ'
+            expected_msg = u'ȧƈƈḗƞŧḗḓ ŧḗẋŧ ƒǿř ŧḗşŧīƞɠ'
 
             self.assertEqual(expected_msg, result['success'])
 
