@@ -10,18 +10,17 @@ from xmodule.partitions.partitions import UserPartitionError, NoSuchUserPartitio
 log = logging.getLogger(__name__)
 
 
-class NotImplementedPartitionScheme(object):
+class ReturnGroup1PartitionScheme(object):
     """
-    This "scheme" allows previously-defined schemes to be purged, while giving existing
-    course data definitions a safe entry point to load.
+    This scheme is needed to allow verification partitions to be killed, see EDUCATOR-199
     """
-
     @classmethod
-    def get_group_for_user(cls, course_key, user, user_partition, assign=True, track_function=None):
+    def get_group_for_user(cls, course_key, user, user_partition, assign=True, track_function=None):  # pylint: disable=unused-argument
         """
-        Dummy method, will fail hard if anyone tries to use this scheme.
+        The previous "allow" definition for verification was defined as 1, so return that.
+        Details at https://github.com/edx/edx-platform/pull/14913/files#diff-feff1466ec4d1b8c38894310d8342a80
         """
-        raise NotImplementedError()
+        return user_partition.get_group(1)
 
 
 class RandomUserPartitionScheme(object):
