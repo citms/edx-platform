@@ -479,19 +479,25 @@ def is_course_in_enterprise_catalog(site, course_id, enterprise_catalog_id):
     response = cache.get(cache_key)
     if not response:
         catalog_integration = CatalogIntegration.current()
-        if catalog_integration.enabled:
-            try:
-                # GET: /api/v1/catalogs/{catalog_id}/contains?course_run_id={course_run_ids}
-                user = User.objects.get(username=catalog_integration.service_username)
-                response = course_discovery_api_client(user=user).catalogs(enterprise_catalog_id).contains.get(
-                    course_run_id=course_id
-                )
-                cache.set(cache_key, response, settings.COURSES_API_CACHE_TIMEOUT)
+        if not catalog_integration.enabled:
+            LOGGER.info("Catalog integration is not enabled.")
+            return False
 
-            except (User.DoesNotExist, ConnectionError, SlumberBaseException, Timeout):
-                LOGGER.exception('Unable to connect to Course Catalog service for catalog contains endpoint.')
-                return False
-        else:
+        try:
+            user = User.objects.get(username=catalog_integration.service_username)
+        except User.DoesNotExist:
+            LOGGER.info("Catalog service user does not exist e.g. lms_catalog_service_user")
+            return False
+
+        try:
+            # GET: /api/v1/catalogs/{catalog_id}/contains?course_run_id={course_run_ids}
+            response = course_discovery_api_client(user=user).catalogs(enterprise_catalog_id).contains.get(
+                course_run_id=course_id
+            )
+            cache.set(cache_key, response, settings.COURSES_API_CACHE_TIMEOUT)
+
+        except (ConnectionError, SlumberBaseException, Timeout):
+            LOGGER.exception('Unable to connect to Course Catalog service for catalog contains endpoint.')
             return False
 
     try:
