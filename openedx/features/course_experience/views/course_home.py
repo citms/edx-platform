@@ -93,7 +93,7 @@ class CourseHomeFragmentView(EdxFragmentView):
         has_visited_course, resume_course_url = self._get_resume_course_info(request, course_id)
 
         # Get the handouts
-        # TODO: Use the course blocks api.
+        # TODO: Use get_course_overview_with_access and blocks api
         course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=True)
         handouts_html = get_course_info_section(request, request.user, course, 'handouts')
 
